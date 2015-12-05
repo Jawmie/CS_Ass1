@@ -16,17 +16,19 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class myMain extends JPanel{
-    private JButton jcomp1;
-    private JButton jcomp2;
-    private JButton jcomp3;
-    private JButton jcomp4;
-    private JTextArea jcomp5;
-    private JTextArea jcomp6;
-    private JTextArea jcomp7;
-    private JTextArea jcomp8;
+    private JButton loadButt;
+    private JButton reverseButt;
+    private JButton revPairButt;
+    private JButton countButt;
+    private JTextArea loadText;
+    private JTextArea reverseText;
+    private JTextArea revPairText;
+    private JTextArea countText;
 
     //make the file available to all the buttons ActionListeners
     public static File textFile;
@@ -38,20 +40,20 @@ public class myMain extends JPanel{
     public myMain() {
         //construct components
         //Buttons for file manipulation
-        jcomp1 = new JButton("Load");
-        jcomp2 = new JButton("Reverse");
-        jcomp3 = new JButton("Reverse Pair");
-        jcomp4 = new JButton("Count");
+        loadButt = new JButton("Load");
+        reverseButt = new JButton("Reverse");
+        revPairButt = new JButton("Reverse Pair");
+        countButt = new JButton("Word Count");
 
         //Load File into the GUI
-        jcomp1.addActionListener(new ActionListener() {
+        loadButt.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.showOpenDialog(null);
                 textFile = fileChooser.getSelectedFile();
 
                 try{
-                    jcomp5.setText(null);
+                    loadText.setText(null);
                     //Reads the file from the file chooser
                     //Breakpoint here
                     BufferedReader br = new BufferedReader(new FileReader(textFile));
@@ -68,10 +70,10 @@ public class myMain extends JPanel{
                         //break out once the readLine finds a null
                     }
                     //set the text of the file in the textArea
-                    jcomp5.setText(line);
+                    loadText.setText(line);
 
                     br.close();
-                    jcomp5.requestFocus(); //set the textArea active
+                    loadText.requestFocus(); //set the textArea active
                 }
                 catch(Exception e) {
                     JOptionPane.showMessageDialog(null, e);
@@ -80,10 +82,10 @@ public class myMain extends JPanel{
         });
 
         //Reverse the words in the file
-        jcomp2.addActionListener(new ActionListener() {
+        reverseButt.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 try{
-                    jcomp6.setText(null);
+                    reverseText.setText(null);
 
                     //Reads the file from the file chooser
                     BufferedReader br = new BufferedReader(new FileReader(textFile));
@@ -97,25 +99,25 @@ public class myMain extends JPanel{
                         String[] werds = fileLine.split(" "); //split the string on a space
 
                         for(int i = werds.length - 1; i >= 0; i--){
-                            jcomp6.append(werds[i] + " ");
+                            reverseText.append(werds[i] + " ");
                         }
                         fileLine = br.readLine();
                     }
 
                     br.close();
-                    jcomp6.requestFocus();
+                    reverseText.requestFocus();
                 }
                 catch(Exception e) {
                     JOptionPane.showMessageDialog(null, e);
                 }
             }
         });
-        //FIX: Array out of bounds error
+
         //Reverse a pair of words
-        jcomp3.addActionListener(new ActionListener() {
+        revPairButt.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 try{
-                    jcomp7.setText(null);
+                    revPairText.setText(null);
                     //Reads the file from the file chooser
                     //Breakpoint here
                     BufferedReader br = new BufferedReader(new FileReader(textFile));
@@ -130,16 +132,16 @@ public class myMain extends JPanel{
                             //have it always less than the length
                             for (int i = 0; i < fileWerds.length; i++) {
                                 //check for pairs of words as well as checking you are at the end of the line
-                                if (i % 2 == 0 && i < fileWerds.length) {
-                                    jcomp7.append(fileWerds[i + 1] + " ");
-                                    jcomp7.append(fileWerds[i] + " ");
+                                if (i % 2 == 0 && i < fileWerds.length - 1) {
+                                    revPairText.append(fileWerds[i + 1] + " ");
+                                    revPairText.append(fileWerds[i] + " ");
                                 }
                             }
                         }
                         fileLine = br.readLine();
                     }
                     br.close();
-                    jcomp7.requestFocus();
+                    revPairText.requestFocus();
                 }
                 catch(Exception e) {
                     JOptionPane.showMessageDialog(null, e);
@@ -148,34 +150,67 @@ public class myMain extends JPanel{
         });
 
         //Perform a word count on all the words
-        jcomp4.addActionListener(new ActionListener() {
+        countButt.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                JFileChooser fileChooser = new JFileChooser();
-                int returnValue = fileChooser.showOpenDialog(null);
+                try
+                {
+                    countText.setText(null);
+                    Map<String, Integer> wordCount = new HashMap<>();
+                    BufferedReader br = new BufferedReader(new FileReader(textFile));
+                    String currentLine = br.readLine();
 
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
-                    File selectedFile = fileChooser.getSelectedFile();
-                    System.out.println(selectedFile.getName());
+                    while (currentLine != null) {
+                        //Make everything lower case to make grouping words easier
+                        currentLine = currentLine.replaceAll("[^a-z/A-Z ]", "").toLowerCase();
+                        //Split words by the spaces between them and put them into an array
+                        String[] words = currentLine.split(" ");
+                        for (int i = 0; i < words.length; i++) {
+                            if (wordCount.containsKey(words[i]))
+                                //If the word already exists in the HashMap the increase the value of
+                                //the one in the HashMap
+                                wordCount.put(words[i], wordCount.get(words[i]) + 1);
+                            else
+                                //If it is a new word, just insert it as a key, with a value 1
+                                wordCount.put(words[i], 1);
+                        }
+                        //Moves the file onto the next line
+                        currentLine = br.readLine();
+                    }
+
+                    //Goes through HashMap and inserts the values into the textArea
+                    for(Map.Entry<String, Integer> word : wordCount.entrySet())
+                    {
+                        String key = word.getKey().toString();
+                        Integer value = word.getValue();
+                        countText.append(key + " " + value + "\n");
+                    }
+
+                    br.close();
+                    countText.requestFocus();
+                }
+                catch(Exception ee)
+                {
+                    ee.printStackTrace();
                 }
             }
         });
 
-        jcomp5 = new JTextArea (5, 5);
-        jcomp6 = new JTextArea (5, 5);
-        jcomp7 = new JTextArea (5, 5);
-        jcomp8 = new JTextArea (5, 5);
+        loadText = new JTextArea (5, 5);
+        reverseText = new JTextArea (5, 5);
+        revPairText = new JTextArea (5, 5);
+        countText = new JTextArea (5, 5);
         //Set line wrap on text area
-        jcomp5.setLineWrap(true);
-        jcomp6.setLineWrap(true);
-        jcomp7.setLineWrap(true);
-        jcomp8.setLineWrap(true);
+        loadText.setLineWrap(true);
+        reverseText.setLineWrap(true);
+        revPairText.setLineWrap(true);
+        countText.setLineWrap(true);
 
         //create panel to hold buttons
         JPanel panel = new JPanel();
-        panel.add(jcomp1);
-        panel.add(jcomp2);
-        panel.add(jcomp3);
-        panel.add(jcomp4);
+        panel.add(loadButt);
+        panel.add(reverseButt);
+        panel.add(revPairButt);
+        panel.add(countButt);
 
         add(panel);
 
@@ -184,34 +219,34 @@ public class myMain extends JPanel{
         setLayout(null);
 
         //add components
-        add (jcomp1);
-        add (jcomp2);
-        add (jcomp3);
-        add (jcomp4);
-        add (jcomp5);
-        add (jcomp6);
-        add (jcomp7);
-        add (jcomp8);
+        add (loadButt);
+        add (reverseButt);
+        add (revPairButt);
+        add (countButt);
+        add (loadText);
+        add (reverseText);
+        add (revPairText);
+        add (countText);
 
         //set component bounds (only needed by Absolute Positioning)
-        jcomp1.setBounds (45, 45, 115, 20);
-        jcomp2.setBounds (210, 45, 115, 20);
-        jcomp3.setBounds (365, 45, 115, 20);
-        jcomp4.setBounds (520, 45, 115, 20);
-        jcomp5.setBounds (35, 75, 135, 425);
-        jcomp6.setBounds (200, 75, 135, 425);
-        jcomp7.setBounds (355, 75, 135, 425);
-        jcomp8.setBounds (510, 75, 135, 425);
+        loadButt.setBounds (45, 45, 115, 20);
+        reverseButt.setBounds (210, 45, 115, 20);
+        revPairButt.setBounds (365, 45, 115, 20);
+        countButt.setBounds (520, 45, 115, 20);
+        loadText.setBounds (35, 75, 135, 425);
+        reverseText.setBounds (200, 75, 135, 425);
+        revPairText.setBounds (355, 75, 135, 425);
+        countText.setBounds (510, 75, 135, 425);
 
-        jcomp5.setBorder(loweredEtched);
-        jcomp6.setBorder(loweredEtched);
-        jcomp7.setBorder(loweredEtched);
-        jcomp8.setBorder(loweredEtched);
+        loadText.setBorder(loweredEtched);
+        reverseText.setBorder(loweredEtched);
+        revPairText.setBorder(loweredEtched);
+        countText.setBorder(loweredEtched);
     }
 
     //run the whole thing
     public static void main (String[] args) {
-        JFrame frame = new JFrame ("MyPanel");
+        JFrame frame = new JFrame ("MyStreamPanel");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().add (new myMain());
         frame.pack();
